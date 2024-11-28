@@ -17,7 +17,7 @@ function Login() {
       }
       const response = await authenticateUser({ username, password });
       if (response.success) {
-        setLocal(response.data, "token");
+        setLocal(JSON.stringify(response.data), "token");
         navigate("/dashboard");
       }
     } catch (error) {

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLocal } from "../utils/helper";
+import TicketView from "./TicketView";
+import Sidebar from "./SideBar";
 
 const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -22,24 +24,14 @@ const Dashboard = () => {
 
   return (
     <div className="flex h-screen">
-      <div
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-gray-800 text-white transform ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } transition-transform duration-300 lg:translate-x-0`}
-      >
-        <div className="flex flex-col h-full">
-          <div className="p-4 text-lg font-bold border-b border-gray-700">
-            Dashboard
-          </div>
-          <ul className="flex-grow space-y-2 p-4">
-            <li className="bg-gray-700 rounded-md px-4 py-2 cursor-pointer">
-              Tickets
-            </li>
-          </ul>
-        </div>
-      </div>
+      {/* Sidebar */}
+      <Sidebar isSidebarOpen={isSidebarOpen} />
 
-      <div className="flex flex-col flex-1 bg-gray-100">
+      {/* Main Content */}
+      <div
+        className={`flex flex-col flex-1 bg-gray-100 transition-all duration-300`}
+      >
+        {/* Header */}
         <div className="flex items-center justify-between bg-white p-4 shadow-md border-b border-gray-300">
           <button
             className="text-gray-700"
@@ -72,12 +64,13 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="flex-1 p-6">
-          <h1 className="text-xl font-semibold text-gray-800">Welcome to the Dashboard</h1>
-          <p className="mt-2 text-gray-600">Here is the content of your dashboard.</p>
+        {/* Content Area */}
+        <div className="flex-1 p-4">
+          <TicketView />
         </div>
       </div>
 
+      {/* Overlay for Mobile Sidebar */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black opacity-50 lg:hidden"
