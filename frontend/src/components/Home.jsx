@@ -6,6 +6,7 @@ import Sidebar from "./SideBar";
 
 const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [userType, setUserType] = useState("");
 
   const navigate = useNavigate();
   const username = "John Doe";
@@ -14,18 +15,23 @@ const Dashboard = () => {
     const token = getLocal("token");
     if (!token) {
       navigate("/login");
+    } else {
+      const data = JSON.parse(token);
+      console.log(data, "data");
+      
+      setUserType(data.is_admin ? "admin" : "user");
     }
   }, []);
 
   const logoutUser = () => {
     localStorage.removeItem("token");
     navigate("/login");
-  }
+  };
 
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <Sidebar isSidebarOpen={isSidebarOpen} />
+      <Sidebar isSidebarOpen={isSidebarOpen} userType={userType} />
 
       {/* Main Content */}
       <div
@@ -65,8 +71,8 @@ const Dashboard = () => {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 p-4">
-          <TicketView />
+        <div className="flex-1 lg:ml-64 lg:p-4 p-2">
+          <TicketView userType={userType}/>
         </div>
       </div>
 

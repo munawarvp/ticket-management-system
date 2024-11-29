@@ -1,6 +1,6 @@
 
 const Sidebar = (props) => {
-    const { isSidebarOpen } = props;
+    const { isSidebarOpen, userType } = props;
 
     return (
         <div
@@ -9,7 +9,7 @@ const Sidebar = (props) => {
         >
             <div className="flex flex-col h-full">
                 <div className="p-4 text-lg font-bold border-b border-gray-700">
-                    Dashboard
+                    {userType === "admin" ? "Admin Dashboard" : "User Dashboard"}
                 </div>
                 <ul className="flex-grow space-y-2 p-4">
                     <li className="bg-gray-700 rounded-md px-4 py-2 cursor-pointer">
