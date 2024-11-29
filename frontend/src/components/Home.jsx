@@ -7,9 +7,9 @@ import Sidebar from "./SideBar";
 const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userType, setUserType] = useState("");
+  const [username, setUsername] = useState("");
 
   const navigate = useNavigate();
-  const username = "John Doe";
 
   useEffect(() => {
     const token = getLocal("token");
@@ -17,7 +17,6 @@ const Dashboard = () => {
       navigate("/login");
     } else {
       const data = JSON.parse(token);
-      console.log(data, "data");
       
       setUserType(data.is_admin ? "admin" : "user");
     }
@@ -72,7 +71,7 @@ const Dashboard = () => {
 
         {/* Content Area */}
         <div className="flex-1 lg:ml-64 lg:p-4 p-2">
-          <TicketView userType={userType}/>
+          <TicketView userType={userType} setUsername={setUsername}/>
         </div>
       </div>
 

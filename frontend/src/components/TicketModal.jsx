@@ -3,7 +3,7 @@ import { TicketPriority } from "../utils/constants";
 import Button from "./Button";
 import { createTicket } from "../utils/api_service";
 
-const TicketModal = ({ isOpen, onClose, userTickets }) => {
+const TicketModal = ({ isOpen, onClose, userTickets, selectedTicket }) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -13,9 +13,9 @@ const TicketModal = ({ isOpen, onClose, userTickets }) => {
   useEffect(() => {
     if (isOpen) {
       setFormData({
-        title: "",
-        description: "",
-        priority: TicketPriority[0]?.value || "",
+        title: selectedTicket?.title || "",
+        description: selectedTicket?.description || "",
+        priority: selectedTicket?.priority || TicketPriority[0]?.value,
       });
     }
   }, [isOpen]);
@@ -40,9 +40,6 @@ const TicketModal = ({ isOpen, onClose, userTickets }) => {
     form.append("title", formData.title);
     form.append("description", formData.description);
     form.append("priority", formData.priority);
-
-    // Log the FormData for demonstration (replace with your API call)
-    console.log(Object.fromEntries(form));
 
     const response = await createTicket(Object.fromEntries(form));
 
