@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from authentication.permissions import IsAdmin
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import Ticket
@@ -48,12 +49,19 @@ class TicketView(APIView):
         """
         user = request.user
         ticket_id = request.GET.get('ticket_id')
+        status = request.GET.get('status')
+        priority = request.GET.get('priority')
         try:
             if ticket_id:
                 ticket = Ticket.objects.get(id=ticket_id, user=user)
                 serializer = TicketSerializer(ticket)
             else:
-                tickets = Ticket.objects.filter(user=user)
+                filters = {'user': user}
+                if status:
+                    filters['status'] = status
+                if priority:
+                    filters['priority'] = priority
+                tickets = Ticket.objects.filter(**filters)
                 serializer = TicketSerializer(tickets, many=True)
             return Response({"success": True, "message": "Ticket listing successful", "data": serializer.data}, status=200)
         except Ticket.DoesNotExist:
@@ -109,3 +117,41 @@ class TicketView(APIView):
             return Response({"success": False, "message": "Ticket not found"}, status=404)
         except Exception as e:
             return Response({"success": False, "message": str(e)}, status=400)
+
+
+class AdminTicketView(TicketView):
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        """
+        View for ticket listing for admin
+        Params:
+                - ticket_id: int (not required)
+        Response:
+                - success: bool
+                - message: str
+                - data: list | dict
+        """
+        ticket_id = request.GET.get('ticket_id')
+        status = request.GET.get('status')
+        priority = request.GET.get('priority')
+        try:
+            if ticket_id:
+                ticket = Ticket.objects.get(id=ticket_id)
+                serializer = TicketSerializer(ticket)
+            else:
+                filters = {}
+                if status:
+                    filters['status'] = status
+                if priority:
+                    filters['priority'] = priority
+
+                tickets = Ticket.objects.filter(**filters)
+                serializer = TicketSerializer(tickets, many=True)
+            return Response({"success": True, "message": "Ticket listing successful", "data": serializer.data}, status=200)
+        except Ticket.DoesNotExist:
+            return Response({"success": False, "message": "Ticket not found", "data": []}, status=404)
+        except Exception as e:
+            return Response({"success": False, "message": str(e), "data": []}, status=400)
