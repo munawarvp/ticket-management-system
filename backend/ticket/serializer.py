@@ -9,6 +9,13 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'first_name', 'last_name', 'username', 'email']
 
+class UserFilterSerializer(serializers.ModelSerializer):
+    label = serializers.CharField(source='username')
+    value = serializers.CharField(source='id')
+    class Meta:
+        model = User
+        fields = ['label', 'value']
+
 class TicketSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     class Meta:

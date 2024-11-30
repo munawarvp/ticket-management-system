@@ -1,24 +1,24 @@
-import { useEffect, useState } from "react";
-import { authenticateUser } from "../utils/api_service";
-import { getLocal, setLocal } from "../utils/helper";
+import { useState } from "react";
+import { registerUser } from "../utils/api_service";
 import { useNavigate } from "react-router-dom";
 
-function Login() {
+function Register() {
+  const [first_name, setFirstName] = useState("");
+  const [last_name, setLastName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const navigate = useNavigate();
 
-  const loginUser = async () => {
+  const registerUserAction = async () => {
     try {
-      if (!username || !password) {
+      if (!username || !password || !first_name || !last_name) {
         alert("Please enter username and password");
         return;
       }
-      const response = await authenticateUser({ username, password });
+      const response = await registerUser({ first_name, last_name, username, password });
       if (response.success) {
-        setLocal(JSON.stringify(response.data), "token");
-        navigate("/dashboard");
+        navigate("/login");
       }
     } catch (error) {
       if (error.response) {
@@ -33,12 +33,56 @@ function Login() {
       <div className="w-full max-w-md rounded-xl bg-white shadow-lg p-8 bg-gray-100">
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900">
-            Sign in to your account
+            Register a new account
           </h2>
         </div>
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-sm">
           <div className="space-y-5">
+            <div className="flex justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="username"
+                    className="block text-sm font-medium text-gray-900"
+                  >
+                    First Name
+                  </label>
+                </div>
+                <div className="mt-2">
+                  <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    required
+                    autoComplete="username"
+                    className="block w-full rounded-md border-0 p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="username"
+                    className="block text-sm font-medium text-gray-900"
+                  >
+                    Last Name
+                  </label>
+                </div>
+                <div className="mt-2">
+                  <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    required
+                    autoComplete="username"
+                    className="block w-full rounded-md border-0 p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
             <div>
               <div className="flex items-center justify-between">
                 <label
@@ -102,15 +146,15 @@ function Login() {
               </div>
             </div>
             <div className="text-sm text-gray-600 flex justify-between">
-              <p>Don't have an account?</p>
-              <p className="text-indigo-600" onClick={() => navigate("/signup")}>Sign up</p>
+              <p>Already have an account?</p>
+              <p className="text-indigo-600" onClick={() => navigate("/")}>Log in</p>
             </div>
             <div>
               <button
                 className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                onClick={loginUser}
+                onClick={registerUserAction}
               >
-                Sign in
+                Sign up
               </button>
             </div>
           </div>
@@ -120,4 +164,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Register;

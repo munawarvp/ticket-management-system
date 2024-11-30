@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { TicketPriority } from "../utils/constants";
 import Button from "./Button";
-import { createTicket } from "../utils/api_service";
+import { createTicket, updateTicket } from "../utils/api_service";
 
-const TicketModal = ({ isOpen, onClose, userTickets, selectedTicket }) => {
+const TicketModal = ({ isOpen, onClose, userTickets, selectedTicket, fetchUserTickets, setSelectedTicket }) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -41,14 +41,23 @@ const TicketModal = ({ isOpen, onClose, userTickets, selectedTicket }) => {
     form.append("description", formData.description);
     form.append("priority", formData.priority);
 
-    const response = await createTicket(Object.fromEntries(form));
-
-    if (response.success) {
-      userTickets.push(response.data);
-      // Close the modal after submission
-      onClose();
+    if (!selectedTicket) {
+      const response = await createTicket(Object.fromEntries(form));
+      if (response.success) {
+        userTickets.push(response.data);
+        onClose();
+      } else {
+        alert(response.message);
+      }
     } else {
-      alert(response.message);
+      const response = await updateTicket(selectedTicket.id, Object.fromEntries(form));
+      if (response.success) {
+        fetchUserTickets();
+        setSelectedTicket(response.data);
+        onClose();
+      } else {
+        alert(response.message);
+      }
     }
   };
 
