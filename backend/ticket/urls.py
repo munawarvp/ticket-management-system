@@ -1,8 +1,9 @@
 from django.urls import path
 
-from ticket.views import TicketView, AdminTicketView
+from ticket.views import ListUsersView, TicketView, AdminTicketView
 
 urlpatterns = [
-    path('', TicketView.as_view()),
+    path('tickets', TicketView.as_view()),
     path('admin', AdminTicketView.as_view()),
+    path('users', ListUsersView.as_view()),
 ]

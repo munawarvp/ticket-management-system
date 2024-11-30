@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { TicketPriority } from "../utils/constants";
 import Button from "./Button";
-import { createTicket } from "../utils/api_service";
+import { createTicket, updateTicket } from "../utils/api_service";
 
-const TicketModal = ({ isOpen, onClose, userTickets }) => {
+const TicketModal = ({ isOpen, onClose, userTickets, selectedTicket, fetchUserTickets, setSelectedTicket }) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -13,9 +13,9 @@ const TicketModal = ({ isOpen, onClose, userTickets }) => {
   useEffect(() => {
     if (isOpen) {
       setFormData({
-        title: "",
-        description: "",
-        priority: TicketPriority[0]?.value || "",
+        title: selectedTicket?.title || "",
+        description: selectedTicket?.description || "",
+        priority: selectedTicket?.priority || TicketPriority[0]?.value,
       });
     }
   }, [isOpen]);
@@ -41,17 +41,23 @@ const TicketModal = ({ isOpen, onClose, userTickets }) => {
     form.append("description", formData.description);
     form.append("priority", formData.priority);
 
-    // Log the FormData for demonstration (replace with your API call)
-    console.log(Object.fromEntries(form));
-
-    const response = await createTicket(Object.fromEntries(form));
-
-    if (response.success) {
-      userTickets.push(response.data);
-      // Close the modal after submission
-      onClose();
+    if (!selectedTicket) {
+      const response = await createTicket(Object.fromEntries(form));
+      if (response.success) {
+        userTickets.push(response.data);
+        onClose();
+      } else {
+        alert(response.message);
+      }
     } else {
-      alert(response.message);
+      const response = await updateTicket(selectedTicket.id, Object.fromEntries(form));
+      if (response.success) {
+        fetchUserTickets();
+        setSelectedTicket(response.data);
+        onClose();
+      } else {
+        alert(response.message);
+      }
     }
   };
 

@@ -8,6 +8,7 @@ import {
 import Login from "./components/Login";
 import Home from "./components/Home";
 import { PrivateRoute, AuthRoute } from "./utils/PrivateRoute";
+import Register from "./components/Register";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Routes>
           <Route path="/" element={<AuthRoute />}>
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Register />} />
           </Route>
 
           <Route path="/dashboard" element={<PrivateRoute />}>

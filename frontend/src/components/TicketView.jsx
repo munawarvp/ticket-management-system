@@ -1,33 +1,81 @@
 import React, { useEffect, useState } from "react";
-import { getAdminTickets, getTickets } from "../utils/api_service";
+import {
+  deleteTicket,
+  getAdminTickets,
+  getTickets,
+  listUsers,
+  updateTicketStatus,
+} from "../utils/api_service";
 import Dropdown from "./Dropdown";
 import Button from "./Button";
 import { TicketPriority, TicketStatus } from "../utils/constants";
 import TicketModal from "./TicketModal";
-import { getLocal } from "../utils/helper";
+import MessageModal from "./MessageModal";
 
-const TicketView = ({ userType }) => {
+const TicketView = ({ userType, setUsername }) => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [userTickets, setUserTickets] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
+  const [userList, setUserList] = useState([]);
+  const [userFilter, setUserFilter] = useState("");
 
   useEffect(() => {
     fetchUserTickets();
-  }, [statusFilter, priorityFilter]);
+  }, [statusFilter, priorityFilter, userFilter, userType]);
 
   const fetchUserTickets = async () => {
     if (userType === "admin") {
-      const response = await getAdminTickets(statusFilter, priorityFilter);
+      const response = await getAdminTickets(
+        statusFilter,
+        priorityFilter,
+        userFilter
+      );
+      const userResponse = await listUsers();
+
       if (response.success) {
         setUserTickets(response.data);
+        if (response.data.length > 0) {
+          setUsername(response.data[0].user.username);
+        }
+      }
+      if (userResponse.success) {
+        setUserList(userResponse.data);
       }
     } else {
       const response = await getTickets(statusFilter, priorityFilter);
       if (response.success) {
         setUserTickets(response.data);
+        if (response.data.length > 0) {
+          setUsername(response.data[0].user.username);
+        }
       }
+    }
+  };
+
+  const deleteUserTicket = async () => {
+    const response = await deleteTicket(selectedTicket.id);
+    if (response.success) {
+      const updatedUserTickets = userTickets.filter(
+        (item) => item.id !== selectedTicket.id
+      );
+      setUserTickets(updatedUserTickets);
+      setSelectedTicket(null);
+      setIsMessageModalOpen(false);
+    } else {
+      alert(response.message);
+    }
+  };
+
+  const updateStatus = async (status) => {
+    const response = await updateTicketStatus(selectedTicket.id, {
+      status,
+    });
+    if (response.success) {
+      fetchUserTickets();
+      setSelectedTicket((prevTicket) => ({ ...prevTicket, status }));
     }
   };
 
@@ -49,8 +97,14 @@ const TicketView = ({ userType }) => {
     );
   }
 
-  const openModal = () => setIsModalOpen(true);
+  const openModal = (edit) => {
+    !edit && setSelectedTicket(null);
+    setIsModalOpen(true);
+  };
   const closeModal = () => setIsModalOpen(false);
+
+  const openMessageModal = () => setIsMessageModalOpen(true);
+  const closeMessageModal = () => setIsMessageModalOpen(false);
 
   return (
     <>
@@ -66,14 +120,24 @@ const TicketView = ({ userType }) => {
             options={TicketPriority}
             onchange={setPriorityFilter}
           />
+          {userType === "admin" && (
+            <Dropdown
+              name="Users"
+              options={userList}
+              onchange={setUserFilter}
+            />
+          )}
         </div>
-        <Button
-          label="New Ticket"
-          icon={<i className="fa-solid fa-circle-plus"></i>}
-          onClick={openModal}
-        >
-          New Ticket
-        </Button>
+        {userType === "user" && (
+          <Button
+            label="New Ticket"
+            icon={<i className="fa-solid fa-circle-plus"></i>}
+            onClick={() => openModal(false)}
+            className="bg-blue-500 text-white hover:bg-blue-600"
+          >
+            New Ticket
+          </Button>
+        )}
       </div>
       <div className="flex flex-col lg:flex-row h-screen">
         {/* Left Section - Ticket List */}
@@ -83,6 +147,13 @@ const TicketView = ({ userType }) => {
           }`}
         >
           <div className="flex flex-col h-full overflow-y-auto">
+            {userTickets.length === 0 && (
+              <div className="h-full flex items-center justify-center bg-white rounded-lg">
+                <h1 className="text-xl font-semibold text-gray-700">
+                  No Tickets
+                </h1>
+              </div>
+            )}
             <ul className="space-y-2">
               {userTickets.map((ticket, index) => (
                 <li
@@ -136,29 +207,59 @@ const TicketView = ({ userType }) => {
                 >
                   &larr; Back
                 </button>
-                <div className="flex gap-2">
-                  <button
-                    className="flex items-center justify-center gap-2 px-4 py-1 bg-yellow-400 text-white font-semibold rounded-md hover:bg-yellow-500"
-                    type="submit"
-                  >
-                    <span>Edit</span>
-                    <i class="fa-sharp fa-solid fa-pen"></i>
-                  </button>
-                  <button
-                    className="flex items-center justify-center gap-2 px-4 py-1 bg-red-600 text-white font-semibold rounded-md hover:bg-red-700"
-                    type="submit"
-                  >
-                    <i class="fa-sharp fa-solid fa-trash"></i>
-                  </button>
-                </div>
+                {userType === "user" && (
+                  <div className="flex gap-2">
+                    <button
+                      className="flex items-center justify-center gap-2 px-4 py-1 bg-gray-100 text-gray-500 font-semibold rounded-md hover:bg-gray-200"
+                      type="submit"
+                      onClick={() => openModal(true)}
+                    >
+                      <span>Edit</span>
+                      <i className="fa-sharp fa-solid fa-pen"></i>
+                    </button>
+                    <button
+                      className="flex items-center justify-center gap-2 px-4 py-1 bg-red-600 text-white font-semibold rounded-md hover:bg-red-700"
+                      type="submit"
+                      onClick={openMessageModal}
+                    >
+                      <i className="fa-sharp fa-solid fa-trash"></i>
+                    </button>
+                  </div>
+                )}
               </div>
               <h2 className="text-2xl pb-1 font-semibold">
                 {selectedTicket.title}
               </h2>
+              <p>
+                <span className="text-gray-700">
+                  {selectedTicket.user.username}
+                </span>
+              </p>
               <p className="text-gray-700 text-sm mb-2">
                 Created At:{" "}
                 {new Date(selectedTicket.created_at).toLocaleString()}
               </p>
+              {userType === "admin" && (
+                <div className="flex gap-2 w-full h-25 mb-2 justify-center align-center">
+                  <h2 className="text-gray-700 mb-2">Change Status :</h2>
+                  <select
+                    id="dropdown"
+                    className="block px-2 py-2 text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none"
+                    // value={selectedOption}
+                    onChange={(e) => updateStatus(e.target.value)}
+                    defaultValue={selectedTicket.status}
+                  >
+                    <option value="" disabled>
+                      Select a status
+                    </option>
+                    {TicketStatus.map((status, index) => (
+                      <option key={index} value={status.value}>
+                        {status.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <hr />
               <div className="flex gap-2 my-2">
                 <p>status :</p>
@@ -195,6 +296,20 @@ const TicketView = ({ userType }) => {
           isOpen={isModalOpen}
           onClose={closeModal}
           userTickets={userTickets}
+          selectedTicket={selectedTicket}
+          fetchUserTickets={fetchUserTickets}
+          setSelectedTicket={setSelectedTicket}
+        />
+      )}
+
+      {isMessageModalOpen && (
+        <MessageModal
+          isOpen={isMessageModalOpen}
+          onClose={closeMessageModal}
+          onSubmit={deleteUserTicket}
+          description={
+            "The ticket will be cancelled and deleted permanently. Are you sure?"
+          }
         />
       )}
     </>
