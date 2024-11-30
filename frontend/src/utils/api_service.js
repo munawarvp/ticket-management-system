@@ -20,7 +20,7 @@ const getTickets = async (status, priority) => {
         Authorization: `Bearer ${token.access}`,
     }
     try {
-        const response = await axios.get(`${BASE_URL}/tickets/?status=${status}&priority=${priority}`, {headers});
+        const response = await axios.get(`${BASE_URL}/api/tickets?status=${status}&priority=${priority}`, {headers});
         return response.data;
     } catch (error) {
         alert(error.response.data.message)
@@ -33,7 +33,7 @@ const getAdminTickets = async (status, priority) => {
         Authorization: `Bearer ${token.access}`,
     }
     try {
-        const response = await axios.get(`${BASE_URL}/tickets/admin?status=${status}&priority=${priority}`, {headers});
+        const response = await axios.get(`${BASE_URL}/api/admin?status=${status}&priority=${priority}`, {headers});
         return response.data;
     } catch (error) {
         alert(error.response.data.message)
@@ -46,11 +46,24 @@ const createTicket = async (data) => {
         Authorization: `Bearer ${token.access}`,
     }
     try {
-        const response = await axios.post(`${BASE_URL}/tickets/`, data, {headers});
+        const response = await axios.post(`${BASE_URL}/api/tickets`, data, {headers});
         return response.data;
     } catch (error) {
         alert(error.response.data.message)
     }
 }
 
-export { authenticateUser, getTickets, createTicket, getAdminTickets }
+const deleteTicket = async (id) => {
+    const token = JSON.parse(getLocal("token"));
+    const headers = {
+        Authorization: `Bearer ${token.access}`,
+    }
+    try {
+        const response = await axios.delete(`${BASE_URL}/api/tickets?ticket_id=${id}`, {headers});
+        return response.data;
+    } catch (error) {
+        alert(error.response.data.message)
+    }
+}
+
+export { authenticateUser, getTickets, createTicket, getAdminTickets, deleteTicket }

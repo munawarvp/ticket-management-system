@@ -1,33 +1,52 @@
 import React, { useEffect, useState } from "react";
-import { getAdminTickets, getTickets } from "../utils/api_service";
+import { deleteTicket, getAdminTickets, getTickets } from "../utils/api_service";
 import Dropdown from "./Dropdown";
 import Button from "./Button";
 import { TicketPriority, TicketStatus } from "../utils/constants";
 import TicketModal from "./TicketModal";
-import { getLocal } from "../utils/helper";
+import MessageModal from "./MessageModal";
 
-const TicketView = ({ userType }) => {
+const TicketView = ({ userType, setUsername }) => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [userTickets, setUserTickets] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
 
   useEffect(() => {
     fetchUserTickets();
-  }, [statusFilter, priorityFilter]);
+  }, [statusFilter, priorityFilter, userType]);
 
   const fetchUserTickets = async () => {
     if (userType === "admin") {
       const response = await getAdminTickets(statusFilter, priorityFilter);
       if (response.success) {
         setUserTickets(response.data);
+        if (response.data.length > 0) {
+          setUsername(response.data[0].user.username);
+        }
       }
     } else {
       const response = await getTickets(statusFilter, priorityFilter);
       if (response.success) {
         setUserTickets(response.data);
+        if (response.data.length > 0) {
+          setUsername(response.data[0].user.username);
+        }
       }
+    }
+  };
+
+  const deleteUserTicket = async () => {
+    const response = await deleteTicket(selectedTicket.id);
+    if (response.success) {
+      const updatedUserTickets = userTickets.filter((item) => item.id !== selectedTicket.id);
+      setUserTickets(updatedUserTickets);
+      setSelectedTicket(null);
+      setIsMessageModalOpen(false);
+    } else {
+      alert(response.message);
     }
   };
 
@@ -49,8 +68,14 @@ const TicketView = ({ userType }) => {
     );
   }
 
-  const openModal = () => setIsModalOpen(true);
+  const openModal = (edit) => {
+    !edit && setSelectedTicket(null);
+    setIsModalOpen(true)
+  };
   const closeModal = () => setIsModalOpen(false);
+
+  const openMessageModal = () => setIsMessageModalOpen(true);
+  const closeMessageModal = () => setIsMessageModalOpen(false);
 
   return (
     <>
@@ -67,20 +92,20 @@ const TicketView = ({ userType }) => {
             onchange={setPriorityFilter}
           />
         </div>
-        <Button
+        { userType === "user" && <Button
           label="New Ticket"
           icon={<i className="fa-solid fa-circle-plus"></i>}
-          onClick={openModal}
+          onClick={() => openModal(false)}
+          className="bg-blue-500 text-white hover:bg-blue-600"
         >
           New Ticket
-        </Button>
+        </Button>}
       </div>
       <div className="flex flex-col lg:flex-row h-screen">
         {/* Left Section - Ticket List */}
         <div
-          className={`flex flex-col w-full h-full lg:w-1/3 bg-gray-100 lg:pr-4 ${
-            selectedTicket ? "hidden lg:flex" : "flex"
-          }`}
+          className={`flex flex-col w-full h-full lg:w-1/3 bg-gray-100 lg:pr-4 ${selectedTicket ? "hidden lg:flex" : "flex"
+            }`}
         >
           <div className="flex flex-col h-full overflow-y-auto">
             <ul className="space-y-2">
@@ -97,9 +122,8 @@ const TicketView = ({ userType }) => {
                     <div className="flex flex-col gap-1">
                       <p className="text-gray-600 text-sm">status:</p>
                       <span
-                        className={`inline-flex items-center rounded-md px-5 py-1.5 text-xs font-medium ring-1 ring-inset ${
-                          getStatusProperties(ticket.status).color
-                        }`}
+                        className={`inline-flex items-center rounded-md px-5 py-1.5 text-xs font-medium ring-1 ring-inset ${getStatusProperties(ticket.status).color
+                          }`}
                       >
                         {getStatusProperties(ticket.status).label}
                       </span>
@@ -107,9 +131,8 @@ const TicketView = ({ userType }) => {
                     <div className="flex flex-col gap-1">
                       <p className="text-gray-600 text-sm">priority:</p>
                       <span
-                        className={`inline-flex items-center rounded-md px-5 py-1.5 text-xs font-medium ring-1 ring-inset ${
-                          getPriorityProperties(ticket.priority).color
-                        }`}
+                        className={`inline-flex items-center rounded-md px-5 py-1.5 text-xs font-medium ring-1 ring-inset ${getPriorityProperties(ticket.priority).color
+                          }`}
                       >
                         {getPriorityProperties(ticket.priority).label}
                       </span>
@@ -123,9 +146,8 @@ const TicketView = ({ userType }) => {
 
         {/* Right Section - Ticket Details */}
         <div
-          className={`flex flex-col w-full h-full lg:w-2/3 bg-white p-4 ${
-            selectedTicket ? "block" : "hidden lg:block"
-          }`}
+          className={`flex flex-col w-full h-full lg:w-2/3 bg-white p-4 ${selectedTicket ? "block" : "hidden lg:block"
+            }`}
         >
           {selectedTicket ? (
             <div className="text-start">
@@ -138,34 +160,48 @@ const TicketView = ({ userType }) => {
                 </button>
                 <div className="flex gap-2">
                   <button
-                    className="flex items-center justify-center gap-2 px-4 py-1 bg-yellow-400 text-white font-semibold rounded-md hover:bg-yellow-500"
+                    className="flex items-center justify-center gap-2 px-4 py-1 bg-gray-100 text-gray-500 font-semibold rounded-md hover:bg-gray-200"
                     type="submit"
+                    onClick={() => openModal(true)}
                   >
                     <span>Edit</span>
-                    <i class="fa-sharp fa-solid fa-pen"></i>
+                    <i className="fa-sharp fa-solid fa-pen"></i>
                   </button>
                   <button
                     className="flex items-center justify-center gap-2 px-4 py-1 bg-red-600 text-white font-semibold rounded-md hover:bg-red-700"
                     type="submit"
+                    onClick={openMessageModal}
                   >
-                    <i class="fa-sharp fa-solid fa-trash"></i>
+                    <i className="fa-sharp fa-solid fa-trash"></i>
                   </button>
                 </div>
               </div>
               <h2 className="text-2xl pb-1 font-semibold">
                 {selectedTicket.title}
               </h2>
+              <p>
+                <span className="text-gray-700">{selectedTicket.user.username}</span>
+              </p>
               <p className="text-gray-700 text-sm mb-2">
                 Created At:{" "}
                 {new Date(selectedTicket.created_at).toLocaleString()}
               </p>
+              { userType === "admin" && <div className="flex gap-2 w-full h-25 mb-2 justify-center align-center">
+                <h2 className="text-gray-700 mb-2">
+                  Change Status :
+                </h2>
+                <Dropdown
+                  name="Status"
+                  options={TicketStatus}
+                  // onchange={handleStatusChange}
+                />
+              </div>}
               <hr />
               <div className="flex gap-2 my-2">
                 <p>status :</p>
                 <span
-                  className={`inline-flex items-center rounded-md px-5 py-1.5 text-xs font-medium ring-1 ring-inset ${
-                    getStatusProperties(selectedTicket.status).color
-                  }`}
+                  className={`inline-flex items-center rounded-md px-5 py-1.5 text-xs font-medium ring-1 ring-inset ${getStatusProperties(selectedTicket.status).color
+                    }`}
                 >
                   {getStatusProperties(selectedTicket.status).label}
                 </span>
@@ -173,9 +209,8 @@ const TicketView = ({ userType }) => {
               <div className="flex gap-2">
                 <p>priority:</p>
                 <span
-                  className={`inline-flex items-center rounded-md px-5 py-1.5 text-xs font-medium ring-1 ring-inset ${
-                    getPriorityProperties(selectedTicket.priority).color
-                  }`}
+                  className={`inline-flex items-center rounded-md px-5 py-1.5 text-xs font-medium ring-1 ring-inset ${getPriorityProperties(selectedTicket.priority).color
+                    }`}
                 >
                   {getPriorityProperties(selectedTicket.priority).label}
                 </span>
@@ -195,8 +230,17 @@ const TicketView = ({ userType }) => {
           isOpen={isModalOpen}
           onClose={closeModal}
           userTickets={userTickets}
+          selectedTicket={selectedTicket}
         />
       )}
+
+      {isMessageModalOpen &&
+        (<MessageModal
+          isOpen={isMessageModalOpen}
+          onClose={closeMessageModal}
+          onSubmit={deleteUserTicket}
+          description={"The ticket will be cancelled and deleted permanently. Are you sure?"}
+        />)}
     </>
   );
 };
