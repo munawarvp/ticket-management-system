@@ -65,6 +65,19 @@ const updateTicketStatus = async (id, data) => {
     }
 }
 
+const deleteTicketAdmin = async (id) => {
+    const token = JSON.parse(getLocal("token"));
+    const headers = {
+        Authorization: `Bearer ${token.access}`,
+    }
+    try {
+        const response = await axios.delete(`${BASE_URL}/api/admin?ticket_id=${id}`, {headers});
+        return response.data;
+    } catch (error) {
+        alert(error.response.data.message)
+    }
+}
+
 const createTicket = async (data) => {
     const token = JSON.parse(getLocal("token"));
     const headers = {
@@ -117,4 +130,21 @@ const listUsers = async () => {
     }
 }
 
-export { authenticateUser, getTickets, createTicket, getAdminTickets, deleteTicket, updateTicket, updateTicketStatus, listUsers, registerUser };
+const assignTicket = async (ticket_id, user_id) => {
+    const token = JSON.parse(getLocal("token"));
+    const headers = {
+        Authorization: `Bearer ${token.access}`,
+    }
+    console.log(headers, 'headers');
+    
+    try {
+        const response = await axios.get(`${BASE_URL}/api/assign?ticket_id=${ticket_id}&user_id=${user_id}`, {headers});
+        return response.data;
+    } catch (error) {
+        alert(error.response.data.message)
+    }
+}
+
+export { authenticateUser, getTickets, createTicket, getAdminTickets, 
+    deleteTicket, updateTicket, updateTicketStatus, listUsers,
+     registerUser, deleteTicketAdmin, assignTicket };

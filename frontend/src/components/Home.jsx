@@ -29,14 +29,11 @@ const Dashboard = () => {
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
       <Sidebar isSidebarOpen={isSidebarOpen} userType={userType} />
 
-      {/* Main Content */}
       <div
         className={`flex flex-col flex-1 bg-gray-100 transition-all duration-300`}
       >
-        {/* Header */}
         <div className="flex items-center justify-between bg-white p-4 shadow-md border-b border-gray-300">
           <button
             className="text-gray-700"
@@ -59,7 +56,7 @@ const Dashboard = () => {
           </button>
 
           <div className="flex items-center space-x-4">
-            <span className="text-gray-700">{username}</span>
+            {userType === "user" && <span className="text-gray-700">{username}</span>}
             <button
               className="text-gray-700 hover:text-indigo-600"
               onClick={logoutUser}
@@ -69,13 +66,11 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Content Area */}
         <div className="flex-1 lg:ml-64 lg:p-4 p-2">
           <TicketView userType={userType} setUsername={setUsername}/>
         </div>
       </div>
 
-      {/* Overlay for Mobile Sidebar */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black opacity-50 lg:hidden"
