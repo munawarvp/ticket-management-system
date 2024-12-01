@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { authenticateUser } from "../utils/api_service";
-import { getLocal, setLocal } from "../utils/helper";
+import { setLocal } from "../utils/helper";
 import { useNavigate } from "react-router-dom";
 
 function Login() {

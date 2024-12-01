@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import {
+  assignTicket,
   deleteTicket,
+  deleteTicketAdmin,
   getAdminTickets,
   getTickets,
   listUsers,
@@ -56,7 +58,21 @@ const TicketView = ({ userType, setUsername }) => {
   };
 
   const deleteUserTicket = async () => {
-    const response = await deleteTicket(selectedTicket.id);
+    if (userType === "admin") {
+      const response = await deleteTicketAdmin(selectedTicket.id);
+      if (response.success) {
+        const updatedUserTickets = userTickets.filter(
+          (item) => item.id !== selectedTicket.id
+        );
+        setUserTickets(updatedUserTickets);
+        setSelectedTicket(null);
+        setIsMessageModalOpen(false);
+      } else {
+        alert(response.message);
+      }
+      return;
+    }
+    let response = await deleteTicket(selectedTicket.id);
     if (response.success) {
       const updatedUserTickets = userTickets.filter(
         (item) => item.id !== selectedTicket.id
@@ -67,6 +83,7 @@ const TicketView = ({ userType, setUsername }) => {
     } else {
       alert(response.message);
     }
+    return;
   };
 
   const updateStatus = async (status) => {
@@ -78,6 +95,14 @@ const TicketView = ({ userType, setUsername }) => {
       setSelectedTicket((prevTicket) => ({ ...prevTicket, status }));
     }
   };
+
+  const assignTicketToUser = async (user_id) => {
+    const response = await assignTicket(selectedTicket.id, user_id);
+    if (response.success) {
+      fetchUserTickets();
+      setSelectedTicket((prevTicket) => ({ ...prevTicket, assigned_to: user_id }));
+    }
+  }
 
   function getStatusProperties(status) {
     return (
@@ -108,7 +133,7 @@ const TicketView = ({ userType, setUsername }) => {
 
   return (
     <>
-      <div className="flex gap-5 align-center justify-end mb-2">
+      <div className="flex gap-5 align-center justify-start mb-2">
         <div className="flex gap-1">
           <Dropdown
             name="Status"
@@ -142,9 +167,8 @@ const TicketView = ({ userType, setUsername }) => {
       <div className="flex flex-col lg:flex-row h-screen">
         {/* Left Section - Ticket List */}
         <div
-          className={`flex flex-col w-full h-full lg:w-1/3 bg-gray-100 lg:pr-4 ${
-            selectedTicket ? "hidden lg:flex" : "flex"
-          }`}
+          className={`flex flex-col w-full h-full lg:w-1/3 bg-gray-100 lg:pr-4 ${selectedTicket ? "hidden lg:flex" : "flex"
+            }`}
         >
           <div className="flex flex-col h-full overflow-y-auto">
             {userTickets.length === 0 && (
@@ -168,9 +192,8 @@ const TicketView = ({ userType, setUsername }) => {
                     <div className="flex flex-col gap-1">
                       <p className="text-gray-600 text-sm">status:</p>
                       <span
-                        className={`inline-flex items-center rounded-md px-5 py-1.5 text-xs font-medium ring-1 ring-inset ${
-                          getStatusProperties(ticket.status).color
-                        }`}
+                        className={`inline-flex items-center rounded-md px-5 py-1.5 text-xs font-medium ring-1 ring-inset ${getStatusProperties(ticket.status).color
+                          }`}
                       >
                         {getStatusProperties(ticket.status).label}
                       </span>
@@ -178,9 +201,8 @@ const TicketView = ({ userType, setUsername }) => {
                     <div className="flex flex-col gap-1">
                       <p className="text-gray-600 text-sm">priority:</p>
                       <span
-                        className={`inline-flex items-center rounded-md px-5 py-1.5 text-xs font-medium ring-1 ring-inset ${
-                          getPriorityProperties(ticket.priority).color
-                        }`}
+                        className={`inline-flex items-center rounded-md px-5 py-1.5 text-xs font-medium ring-1 ring-inset ${getPriorityProperties(ticket.priority).color
+                          }`}
                       >
                         {getPriorityProperties(ticket.priority).label}
                       </span>
@@ -194,9 +216,8 @@ const TicketView = ({ userType, setUsername }) => {
 
         {/* Right Section - Ticket Details */}
         <div
-          className={`flex flex-col w-full h-full lg:w-2/3 bg-white p-4 ${
-            selectedTicket ? "block" : "hidden lg:block"
-          }`}
+          className={`flex flex-col w-full h-full lg:w-2/3 bg-white p-4 ${selectedTicket ? "block" : "hidden lg:block"
+            }`}
         >
           {selectedTicket ? (
             <div className="text-start">
@@ -207,25 +228,23 @@ const TicketView = ({ userType, setUsername }) => {
                 >
                   &larr; Back
                 </button>
-                {userType === "user" && (
-                  <div className="flex gap-2">
-                    <button
-                      className="flex items-center justify-center gap-2 px-4 py-1 bg-gray-100 text-gray-500 font-semibold rounded-md hover:bg-gray-200"
-                      type="submit"
-                      onClick={() => openModal(true)}
-                    >
-                      <span>Edit</span>
-                      <i className="fa-sharp fa-solid fa-pen"></i>
-                    </button>
-                    <button
-                      className="flex items-center justify-center gap-2 px-4 py-1 bg-red-600 text-white font-semibold rounded-md hover:bg-red-700"
-                      type="submit"
-                      onClick={openMessageModal}
-                    >
-                      <i className="fa-sharp fa-solid fa-trash"></i>
-                    </button>
-                  </div>
-                )}
+                <div className="flex gap-2">
+                  {userType === "user" && <button
+                    className="flex items-center justify-center gap-2 px-4 py-1 bg-gray-100 text-gray-500 font-semibold rounded-md hover:bg-gray-200"
+                    type="submit"
+                    onClick={() => openModal(true)}
+                  >
+                    <span>Edit</span>
+                    <i className="fa-sharp fa-solid fa-pen"></i>
+                  </button>}
+                  <button
+                    className="flex items-center justify-center gap-2 px-4 py-1 bg-red-600 text-white font-semibold rounded-md hover:bg-red-700"
+                    type="submit"
+                    onClick={openMessageModal}
+                  >
+                    <i className="fa-sharp fa-solid fa-trash"></i>
+                  </button>
+                </div>
               </div>
               <h2 className="text-2xl pb-1 font-semibold">
                 {selectedTicket.title}
@@ -239,34 +258,54 @@ const TicketView = ({ userType, setUsername }) => {
                 Created At:{" "}
                 {new Date(selectedTicket.created_at).toLocaleString()}
               </p>
-              {userType === "admin" && (
-                <div className="flex gap-2 w-full h-25 mb-2 justify-center align-center">
-                  <h2 className="text-gray-700 mb-2">Change Status :</h2>
-                  <select
-                    id="dropdown"
-                    className="block px-2 py-2 text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none"
-                    // value={selectedOption}
-                    onChange={(e) => updateStatus(e.target.value)}
-                    defaultValue={selectedTicket.status}
-                  >
-                    <option value="" disabled>
-                      Select a status
-                    </option>
-                    {TicketStatus.map((status, index) => (
-                      <option key={index} value={status.value}>
-                        {status.label}
+              <div className="flex justify-center gap-1">
+                {userType === "admin" && (
+                  <div className="flex gap-2 h-25 mb-2">
+                    <h2 className="text-gray-700 mb-2">Change Status :</h2>
+                    <select
+                      id="dropdown"
+                      className="block text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none"
+                      value={selectedTicket.status}
+                      onChange={(e) => updateStatus(e.target.value)}
+                    >
+                      <option value="" disabled>
+                        Select a status
                       </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+                      {TicketStatus.map((status, index) => (
+                        <option key={index} value={status.value}>
+                          {status.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {userType === "admin" && (
+                  <div className="flex gap-2 h-25 mb-2">
+                    <h2 className="text-gray-700 mb-2">Assign To :</h2>
+                    <select
+                      id="dropdown"
+                      className="block px-2 py-2 text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none"
+                      value={selectedTicket.assigned_to}
+                      onChange={(e) => assignTicketToUser(e.target.value)}
+                    >
+                      <option value="" disabled>
+                        Select a status
+                      </option>
+                      {userList.map((user, index) => (
+                        <option key={index} value={user.value}>
+                          {user.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
               <hr />
               <div className="flex gap-2 my-2">
                 <p>status :</p>
                 <span
-                  className={`inline-flex items-center rounded-md px-5 py-1.5 text-xs font-medium ring-1 ring-inset ${
-                    getStatusProperties(selectedTicket.status).color
-                  }`}
+                  className={`inline-flex items-center rounded-md px-5 py-1.5 text-xs font-medium ring-1 ring-inset ${getStatusProperties(selectedTicket.status).color
+                    }`}
                 >
                   {getStatusProperties(selectedTicket.status).label}
                 </span>
@@ -274,9 +313,8 @@ const TicketView = ({ userType, setUsername }) => {
               <div className="flex gap-2">
                 <p>priority:</p>
                 <span
-                  className={`inline-flex items-center rounded-md px-5 py-1.5 text-xs font-medium ring-1 ring-inset ${
-                    getPriorityProperties(selectedTicket.priority).color
-                  }`}
+                  className={`inline-flex items-center rounded-md px-5 py-1.5 text-xs font-medium ring-1 ring-inset ${getPriorityProperties(selectedTicket.priority).color
+                    }`}
                 >
                   {getPriorityProperties(selectedTicket.priority).label}
                 </span>

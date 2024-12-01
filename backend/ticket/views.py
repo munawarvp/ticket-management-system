@@ -185,6 +185,23 @@ class AdminTicketView(TicketView):
             return Response({"success": False, "message": "Ticket not found"}, status=404)
         except Exception as e:
             return Response({"success": False, "message": str(e)}, status=400)
+
+    def delete(self, request):
+        """
+        View for ticket deletion for admin
+        Params:
+                - ticket_id: int (required)
+        Response:
+                - success: bool
+                - message: str
+        """
+        ticket_id = request.GET.get('ticket_id')
+        try:
+            ticket = Ticket.objects.get(id=ticket_id)
+            ticket.delete()
+            return Response({"success": True, "message": "Ticket deleted successfully"}, status=200)
+        except Exception as e:
+            return Response({"success": False, "message": str(e)}, status=400)
         
 
 class ListUsersView(APIView):
@@ -203,3 +220,36 @@ class ListUsersView(APIView):
         users = User.objects.all().exclude(is_superuser=True)
         serializer = UserFilterSerializer(users, many=True)
         return Response({"success": True, "message": "Users listing successful", "data": serializer.data}, status=200)
+
+
+class AssignTicketView(APIView):
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        """
+        View for assigning ticket to user
+        Params:
+                - ticket_id: int (required)
+                - user_id: int (required)
+        Response:
+                - success: bool
+                - message: str
+                - data: dict
+        """
+        ticket_id = request.GET.get('ticket_id')
+        user_id = request.GET.get('user_id')
+        try:
+            ticket = Ticket.objects.get(id=ticket_id)
+            user = User.objects.get(id=user_id)
+            ticket.assigned_to = user
+            ticket.save()
+            serializer = TicketSerializer(ticket)
+            return Response({"success": True, "message": "Ticket assigned successfully", "data": serializer.data}, status=200)
+        except Ticket.DoesNotExist:
+            return Response({"success": False, "message": "Ticket not found"}, status=404)
+        except User.DoesNotExist:
+            return Response({"success": False, "message": "User not found"}, status=404)
+        except Exception as e:
+            return Response({"success": False, "message": str(e)}, status=400)

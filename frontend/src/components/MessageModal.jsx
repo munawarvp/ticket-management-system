@@ -8,7 +8,6 @@ const MessageModal = ({ isOpen, onClose, onSubmit, description }) => {
         isOpen ? "opacity-100" : "opacity-0"
       }`}
     >
-      {/* Modal Body */}
       <div
         className={`bg-white p-6 rounded-lg w-11/12 sm:w-1/3 lg:w-1/4 max-w-full transform transition-all ${
           isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
